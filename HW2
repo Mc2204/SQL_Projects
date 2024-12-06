@@ -1,0 +1,179 @@
+Set SERVEROUTPUT ON;
+
+DECLARE
+ID Emp_60.EMPLOYEE_ID%TYPE;
+fname Emp_60.FIRST_NAME%TYPE;
+lname Emp_60.LAST_NAME%TYPE;
+salary Emp_60.SALARY%TYPE;
+
+BEGIN
+    ID := 311;
+    fname := 'Fred';
+    lname := 'Fritz';
+    salary := 5000;
+
+    INSERT INTO EMP_60(EMPLOYEE_ID, FIRST_NAME, LAST_NAME, SALARY)
+    VALUES(ID, fname, lname, salary);
+
+    COMMIT;
+
+    DBMS_OUTPUT.PUT_LINE('Employee ID is ' || ID || '.');
+    DBMS_OUTPUT.PUT_LINE('First name: ' || fname || '.');
+    DBMS_OUTPUT.PUT_LINE('Last Name: ' || lname || '.');
+    DBMS_OUTPUT.PUT_LINE('Salary: ' || salary || ' .');
+
+End;
+
+
+Set SERVEROUTPUT ON;
+
+DECLARE
+ID Emp_60.EMPLOYEE_ID%TYPE;
+fname Emp_60.FIRST_NAME%TYPE;
+lname Emp_60.LAST_NAME%TYPE;
+salary Emp_60.SALARY%TYPE;
+
+BEGIN
+    ID := 311;
+
+    UPDATE EMP_60
+    SET SALARY = 6000
+    WHERE employee_ID = ID
+
+    
+
+    RETURNING FIRST_NAME, LAST_NAME, SALARY
+    INTO fname, lname, salary;
+    DBMS_OUTPUT.PUT_LINE('After UPDATE, Only change is salary: ' || salary || ' First Name: ' || fname || 'Last Name: ' || lname);
+End;
+
+
+Set SERVEROUTPUT ON;
+
+DECLARE
+ID Emp_60.EMPLOYEE_ID%TYPE;
+fname Emp_60.FIRST_NAME%TYPE;
+lname Emp_60.LAST_NAME%TYPE;
+salary Emp_60.SALARY%TYPE;
+
+BEGIN
+    ID := 311;
+    DELETE FROM EMP_60
+    Where employee_id = ID
+
+    RETURNING FIRST_NAME, LAST_NAME, SALARY
+    INTO fname, lname, salary;
+
+    DBMS_OUTPUT.PUT_LINE('Id deleted: ' || ID);
+
+End;
+
+
+Set SERVEROUTPUT ON;
+
+DECLARE
+hire Employees.HIRE_DATE%TYPE;
+ID Employees.EMPLOYEE_ID%TYPE;
+firstn Employees.FIRST_NAME%TYPE;
+lastn Employees.LAST_NAME%TYPE;
+sal Employees.SALARY%TYPE;
+Wyear NUMBER;
+Wyear_bonus Number;
+bonus Number;
+Sbase Number;
+aDate Date := Date '2024-12-31';
+
+BEGIN
+    ID:=112;
+    
+    SELECT hire_date, Salary
+    INTO hire, sal
+    FROM EMPLOYEES
+    Where employee_id = ID;
+
+    Wyear := (FLOOR(MONTHS_BETWEEN(aDate, hire)/12));
+    
+    IF Wyear >= 30 THEN
+        Wyear_bonus := 800;
+    
+    ELSIF Wyear >= 25 THEN
+        Wyear_bonus := 600;
+    
+    ELSIF Wyear < 25 THEN
+        Wyear_bonus := 0;
+    END IF;
+
+    IF sal > 10000 THEN
+        Sbase := 1300;
+
+    ELSIF sal >= 5000 AND sal <= 10000 THEN
+        Sbase := 1000;
+
+    ELSIF sal < 5000 THEN
+        Sbase := 800;
+    END IF;
+    
+    bonus := 1000 + Wyear_bonus + Sbase;
+    
+    DBMS_OUTPUT.PUT_LINE('Employee with ID ' || ID || ', should get in bonus: ' || bonus);
+
+END;
+
+
+DECLARE 
+   i NUMBER; 
+   j NUMBER; 
+BEGIN 
+     FOR i IN 1..9
+     LOOP
+       DBMS_OUTPUT.PUT ('|');
+        FOR j IN 1 .. 9
+        LOOP
+            DBMS_OUTPUT.PUT (' ' || i || j || ' ');
+        END LOOP; 
+        DBMS_OUTPUT.PUT_LINE ('|');
+   END loop;
+END;
+
+
+DECLARE
+    i NUMBER;
+    j NUMBER;
+BEGIN
+    FOR i IN 20..24 LOOP
+      FOR j in 1 .. 24 LOOP
+        if MOD(i, j) = 0 THEN
+            DBMS_OUTPUT.PUT_LINE(j);
+            END IF;
+        END LOOP;
+    END LOOP;
+
+End;
+
+BEGIN
+    UPDATE EMP_60
+    Set SALARY = 1.05 * SALARY
+    WHERE SALARY <= 6000;
+    DBMS_OUTPUT.PUT_LINE(TO_CHAR(SQL%ROWCOUNT));
+    ROLLBACK;
+END;
+
+DECLARE
+    CURSOR temp IS 
+        SELECT *
+        FROM EMP_60
+        WHERE Salary < 6000;
+    rec EMP_60%ROWTYPE;
+
+BEGIN
+    OPEN temp;
+    loop
+        Fetch temp into rec;
+        EXIT WHEN temp%NOTFOUND;
+        DBMS_OUTPUT.PUT_LINE('ID: ' || rec.employee_ID );
+        DBMS_OUTPUT.PUT_LINE('Name: ' || rec.LAST_NAME || ', ' || rec.FIRST_NAME);
+        DBMS_OUTPUT.PUT_LINE('Salary: ' || TO_CHAR(rec.SALARY));
+    END LOOP;
+    CLOSE temp;
+END;
+
