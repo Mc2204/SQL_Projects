@@ -1,0 +1,73 @@
+SELECT EMPLOYEE_ID, LAST_NAME, FIRST_NAME, DEPARTMENT_ID FROM EMPLOYEES
+WHERE HIRE_DATE LIKE '___12___';
+
+
+SELECT LOCATION_ID, STREET_ADDRESS, POSTAL_CODE, CITY, COUNTRY_ID FROM LOCATIONS
+WHERE UPPER(STREET_ADDRESS) LIKE UPPER('%Victoria%');
+
+
+SELECT LOCATION_ID, STREET_ADDRESS ||  CITY ||  STATE_PROVINCE || POSTAL_CODE || COUNTRY_ID
+FROM LOCATIONS
+WHERE COUNTRY_ID = 'US';
+
+
+SELECT e.EMPLOYEE_ID, e.FIRST_NAME, e.LAST_NAME, e.SALARY, e.DEPARTMENT_ID FROM EMPLOYEES e
+INNER JOIN Employees m on e.manager_id = m.employee_id
+WHERE m.first_name = 'Matthew' and m.last_name = 'Weiss';
+
+
+SELECT Departments.DEPARTMENT_ID, Departments.DEPARTMENT_NAME, MAX(employees.SALARY) as Max, Min(Employees.salary) as Min From DEPARTMENTS
+Inner JOIN EMPLOYEES ON DEPARTMENTS.DEPARTMENT_ID = EMPLOYEES.DEPARTMENT_ID
+Group By DEPARTMENTS.DEPARTMENT_ID, DEPARTMENTS.DEPARTMENT_NAME
+Order By DEPARTMENTS.DEPARTMENT_ID;
+
+
+SELECT DEPARTMENTS.DEPARTMENT_ID, Departments.department_name, Locations.STREET_ADDRESS ||  Locations.CITY ||  Locations.STATE_PROVINCE || Locations.POSTAL_CODE || Locations.COUNTRY_ID
+From LOCATIONS
+Inner JOIN DEPARTMENTS on LOCATIONS.LOCATION_ID = DEPARTMENTS.LOCATION_ID
+WHERE DEPARTMENTS.MANAGER_ID IS NOT NULL;
+
+
+Select employee_id, last_name, first_name, department_id
+From EMPLOYEES e
+where FIRST_NAME IN(
+    select first_name from employees group by first_name
+    having count(*)>1
+)
+order by first_name;
+
+
+
+
+Select Employees.employee_id, Employees.last_name, Employees.first_name, Departments.department_name, employees.manager_id as immediate_suupervisor, departments.Manager_id as department_head
+FROM EMPLOYEES
+INNER Join Departments on Employees.DEPARTMENT_ID = Departments.department_id
+where employees.DEPARTMENT_ID = 70 AND EMPLOYEES.MANAGER_ID != Departments.manager_id;
+
+
+
+SET serveroutput on;
+Declare 
+    lastname varchar2(25) := 'Jackson';
+    income NUMBER(9,2);
+Begin
+    income := 12345;
+    DBMS_OUTPUT.PUT_LINE('Last name: ' || lastname);
+    DBMS_OUTPUT.PUT_LINE('Income: ' ||TO_CHAR (income, '$99,999'));
+END;
+
+
+
+SET serveroutput on;
+Declare
+    lastname Employees.last_name%TYPE := 'Jackson';
+Begin
+    DBMS_OUTPUT.PUT_LINE('Outer block - Last name: ' || lastname);
+
+    Declare
+        lastnm varchar2(25) := 'Lincoln';
+    Begin
+        DBMS_OUTPUT.PUT_LINE('Inner block name: ' || lastnm);
+        DBMS_OUTPUT.PUT_LINE('Inner block name: ' || lastname);
+    END;
+END;
