@@ -1,4 +1,4 @@
--Q1
+--Q1
 set serveroutput on;
 DECLARE
     Type tab_column IS RECORD(
@@ -22,7 +22,7 @@ BEGIN
 END;
 
 
--Q2
+--Q2
 
 set SERVEROUTPUT ON;
 DECLARE
@@ -59,7 +59,7 @@ BEGIN
 END;
 
 
--Q3
+--Q3
 
 DECLARE
     TYPE Dept_Info IS RECORD(
@@ -95,7 +95,7 @@ BEGIN
 END;
 
 
--Q4
+--Q4
 
 DECLARE
     Deptno NUMBER := 30;
@@ -117,7 +117,7 @@ END;
 
 
 
--Q5
+--Q5
 
 CREATE OR REPLACE PROCEDURE Dep_Emp_sal(Deptno IN NUMBER, min_sal OUT NUMBER, max_sal OUT NUMBER) AS
 BEGIN
@@ -139,7 +139,7 @@ END;
 
 
 
--Q6
+--Q6
 
 DECLARE
     min_sal NUMBER;
