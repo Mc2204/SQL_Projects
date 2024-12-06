@@ -1,0 +1,148 @@
+DECLARE
+    CURSOR c  IS
+     	SELECT   last_name ||', ' || first_name Full_name,  
+               salary, manager_id
+    	FROM     employees 
+        WHERE  department_id = 80 and salary >= 12000 ;
+BEGIN
+    DBMS_OUTPUT.put_line  
+        (' No      Emp Full Name            Salary        Boss ID');    
+    DBMS_OUTPUT.put_line  
+        ('----  ------------------------  ------------  ---------');    
+
+        FOR x IN c LOOP
+          DBMS_OUTPUT.PUT_LINE(RPAD (c%ROWCOUNT, 7) || RPAD (x.Full_name, 25) 
+                 || To_Char ( x.salary, '$99,999') || LPAD ( x.manager_id, 13));
+        END LOOP;
+END;
+
+DECLARE
+    dept employees.DEPARTMENT_ID%TYPE;
+    ID employees.EMPLOYEE_ID%TYPE;
+    sal employees.SALARY%TYPE;
+    bonus NUMBER(8,2);
+    commission employees.COMMISSION_PCT%TYPE;
+    total_dept_bonus NUMBER(8,2);
+
+    BEGIN
+        dept := 80;
+        total_dept_bonus := 0;
+    FOR x IN (SELECT EMPLOYEE_ID, SALARY, COMMISSION_PCT FROM EMPLOYEES WHERE DEPARTMENT_ID = dept) LOOP
+
+        commission := x.COMMISSION_PCT;
+        sal := x.SALARY;
+        ID := x.EMPLOYEE_ID;
+
+        IF commission >= .3 THEN
+            IF sal > 10000 THEN
+                bonus := 1500;
+            ELSIF sal > 7000 and sal < 10000 THEN
+                bonus := 1400;
+            ELSIF sal < 7000 THEN
+                bonus := 1300;
+            END IF;
+
+        ELSIF commission < .3 and commission >= .2 THEN 
+            IF sal > 10000 THEN
+                bonus := 1300;
+            ELSIF sal > 7000 and sal < 10000 THEN
+                bonus := 1200;
+            ELSIF sal < 7000 THEN
+                bonus := 1100;
+            END IF;
+
+        ELSIF commission < .2 and commission >= .1 THEN
+            IF sal >= 10000 THEN
+                bonus := 1100;
+            ELSIF sal >= 7000 and sal < 10000 THEN
+                bonus := 1000;
+            ELSIF sal < 7000 THEN
+                bonus := 900;
+            END IF;
+        ELSIF commission < .1 THEN
+            bonus := 800;
+            END IF;
+        total_dept_bonus := total_dept_bonus + bonus;
+
+
+        DBMS_OUTPUT.PUT_LINE('ID: '|| ID || ' ' || 'Salary: '|| sal || ' ' || 'Commision rate: '|| commission || ' ' || 'Bonus: '|| Bonus);
+        END LOOP;
+        DBMS_OUTPUT.PUT_LINE('Total bonus for department: ' || total_dept_bonus);
+END;
+
+DECLARE
+    CURSOR c (tname IN VARCHAR2) IS
+        SELECT COLUMN_NAME, DATA_TYPE, DATA_LENGTH
+        FROM user_tab_columns
+        WHERE table_name = tname;
+        tname VARCHAR2(30);
+    
+    BEGIN
+        tname := 'LOCATIONS';
+        DBMS_OUTPUT.PUT_LINE('Table: ' || tname);
+        for x in c('LOCATIONS')LOOP
+            DBMS_OUTPUT.PUT_LINE('Column Name: ' || x.COLUMN_NAME || ' ' || 'Data Type: ' || x.DATA_TYPE || ' ' || 'Data Length: ' || x.DATA_LENGTH);
+        END LOOP;
+        DBMS_OUTPUT.PUT_LINE('--------------------------');
+        tname := 'EMPLOYEES';
+        DBMS_OUTPUT.PUT_LINE('Table: ' || tname);
+        for x in c('EMPLOYEES')LOOP
+            DBMS_OUTPUT.PUT_LINE('Column Name: ' || x.COLUMN_NAME || ' ' || 'Data Type: ' || x.DATA_TYPE || ' ' || 'Data Length: ' || x.DATA_LENGTH);
+        END LOOP;
+END;
+
+DROP table Emply_temp;  -- as we may have created before.
+     Create table Emply_temp 
+    AS select * from employees where department_id = 80;
+    
+DECLARE
+    CURSOR cs IS
+        SELECT EMPLOYEE_ID, LAST_NAME, SALARY, COMMISSION_PCT
+        FROM EMPLY_TEMP
+        FOR UPDATE OF SALARY;
+        sal EMPLY_TEMP.SALARY%TYPE;
+        ID EMPLY_TEMP.EMPLOYEE_ID%TYPE;
+        lname EMPLY_TEMP.LAST_NAME%TYPE;
+        commission EMPLY_TEMP.COMMISSION_PCT%TYPE;
+        new_sal NUMBER(8,2);
+    BEGIN
+            for x in cs LOOP
+                ID := x.EMPLOYEE_ID;
+                lname := x.LAST_NAME;
+                sal := x.SALARY;
+                commission := x.COMMISSION_PCT;
+                IF commission < .15 THEN
+                    new_sal := sal * 1.08;
+                UPDATE EMPLY_TEMP
+                SET SALARY = new_sal
+                WHERE CURRENT OF cs;
+                DBMS_OUTPUT.PUT_LINE('ID: ' || ID || ' ' || 'Last Name: ' || lname || ' ' || 'Old Salary: ' || sal || ' ' || 'New Salary: ' || new_sal);
+                END IF;
+            END LOOP;
+    END;
+
+DECLARE 
+    TYPE EmpCurTyp IS REF CURSOR RETURN employees%ROWTYPE;
+    empV EmpCurTyp;
+    dept_id NUMBER(4):=60;
+    emp EMPLOYEES%ROWTYPE;
+
+BEGIN
+    OPEN empV for select * FROM employees WHERE department_id = dept_id ORDER BY last_name;
+
+    LOOP
+        FETCH empV INTO emp;
+        EXIT WHEN empV%NOTFOUND;
+        DBMS_OUTPUT.PUT_LINE('ID: ' || emp.EMPLOYEE_ID || ' ' || 'Name: '|| emp.first_name|| ' ' || emp.LAST_NAME);
+    END LOOP;
+    CLOSE empV;
+
+    OPEN empV for SELECT * FROM employees WHERE  salary >= 15000 ORDER BY employee_id;
+
+    LOOP
+        FETCH empV INTO emp;
+        EXIT WHEN empV%NOTFOUND;
+        DBMS_OUTPUT.PUT_LINE('ID: ' || emp.EMPLOYEE_ID || ' ' || 'Name: '|| emp.first_name|| ' ' || emp.LAST_NAME || ' ' || 'Salary: ' || emp.salary);
+    END LOOP;
+    CLOSE empV;
+END;
