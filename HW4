@@ -1,0 +1,100 @@
+DECLARE
+  Exceed_Limit EXCEPTION;
+  counter Number:= 10;
+
+BEGIN
+    while counter <= 12 LOOP
+    counter := counter + 1;
+    DBMS_OUTPUT.PUT_LINE('Counter: ' || counter);
+
+    if counter > 12 then
+        RAISE Exceed_Limit;
+    END IF;
+    END LOOP;
+EXCEPTION
+    WHEN Exceed_Limit THEN
+        DBMS_OUTPUT.PUT_LINE('Error: Counter Exceeded the limit (12)');
+END;
+
+
+
+DECLARE
+    min_sal NUMBER:= 1200;
+    Error_sal EXCEPTION;
+    counter NUMBER:= 0;
+
+    Cursor c IS
+        SELECT empno, sal, deptno
+        FROM emp;
+    
+BEGIN
+    for i in c LOOP
+        BEGIN
+        if i.sal <= min_sal THEN
+            DBMS_OUTPUT.PUT_LINE('ID: ' || i.empno || ' Job ID: ' || i.deptno || ' Salary: ' || i.sal);
+            RAISE Error_sal;
+        End if;
+
+
+    EXCEPTION
+        When Error_sal THEN
+            counter := counter + 1;
+    End;
+END LOOP;
+
+    If counter = 0 then
+        DBMS_OUTPUT.PUT_LINE('No Employee has salary less than 1200');
+    Else
+        DBMS_OUTPUT.PUT_LINE('Total Employees with salary less than 1200: ' || counter);
+    End if;
+END;
+
+
+CREATE TABLE log_error (
+  Occur_date  DATE DEFAULT SYSDATE,
+  Username    VARCHAR2 (15) DEFAULT USER,
+  Err_code    NUMBER,
+  Err_msg     VARCHAR2 (255));
+
+DECLARE
+    dept_id NUMBER(4) := 220;
+    err_code NUMBER;
+    err_msg VARCHAR2(255);
+BEGIN
+    DELETE FROM DEPARTMENTS WHERE DEPARTMENT_ID = dept_id;
+
+    dept_id := 30; 
+    DELETE FROM DEPARTMENTS WHERE DEPARTMENT_ID = dept_id;
+
+EXCEPTION
+    WHEN OTHERS THEN
+        err_code := SQLCODE;
+        err_msg := SUBSTR(SQLERRM, 1, 255);
+
+        INSERT INTO log_error (Err_code, Err_msg)
+        VALUES (err_code, err_msg);  
+END;
+/
+ROLLBACK;  
+
+
+DECLARE
+    dept_id NUMBER(4) := 220;
+    Child_FK EXCEPTION;
+    PRAGMA EXCEPTION_INIT(Child_FK, -2292);
+BEGIN
+    DELETE FROM DEPARTMENTS WHERE DEPARTMENT_ID = dept_id;
+
+    dept_id := 30; 
+    DELETE FROM DEPARTMENTS WHERE DEPARTMENT_ID = dept_id;
+
+EXCEPTION
+    WHEN Child_FK THEN
+        Insert into log_error(OCCUR_DATE, USERNAME, ERR_CODE, ERR_MSG)
+        VALUES (SYSDATE, USER, -2292 ,'FK rule violated - child record found');
+    END;
+/
+
+column ERR_MSG FORMAT A50;
+SELECT * FROM log_error;
+rollback;
