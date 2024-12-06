@@ -1,0 +1,157 @@
+--Q1
+DROP TABLE Emp_log;
+CREATE TABLE      Emp_log(
+   Updated_Date	DATE,
+   Updated_by	Varchar2 (20),
+   Action         Varchar2 (30)
+);
+
+CREATE OR REPLACE TRIGGER Emp_Delete
+AFTER DELETE ON Employees
+BEGIN
+    INSERT INTO Emp_log(Updated_Date, Updated_by, Action)
+    VALUES(SYSDATE, USER, 'Table Changed');
+    END;
+/
+DELETE EMPLOYEES where salary < 2300;
+SELECT * FROM EMPLOYEES;
+ROLLBACK;
+DROP TRIGGER Emp_Delete;
+
+
+--Q2
+DROP TABLE Emp_Del_log;
+CREATE TABLE Emp_Del_log (
+   Empno      number (4),
+   OLD_name   Varchar2 (20),
+   OLD_sal     number (8, 2),
+   OLD_mgrno   number (4),  
+   Updated_Date	DATE,
+   Updated_By	Varchar2 (15),
+   Action         Varchar2 (30)
+);
+
+SET SERVEROUTPUT ON;
+
+CREATE OR REPLACE TRIGGER Emp_Del_Row
+AFTER DELETE ON Emp
+FOR EACH ROW
+BEGIN
+    INSERT INTO Emp_Del_log VALUES
+    (:OLD.Empno, :OLD.Ename, :OLD.Sal, :OLD.Mgr, SYSDATE, USER, 'Row Deleted');
+    END Emp_Del_Row;
+/
+DELETE Emp where mgr = 7698;
+SELECT * FROM Emp_Del_log;
+ROLLBACK;
+DROP TRIGGER Emp_Del_Row;
+
+
+
+--Q3
+Drop  TABLE      Dept_log;
+CREATE TABLE      Dept_log(
+   OLD_Deptno     number (4),
+   NEW_Deptno     number (4),
+   OLD_Deptname   Varchar2 (10),
+   NEW_Deptname   Varchar2 (10),
+   OLD_MgrID      number (6),
+   NEW_MgrID      number (6),
+   Updated_Date	DATE,
+   Updated_By	Varchar2 (15),
+   Action         Varchar2 (30)
+);
+
+Set SERVEROUTPUT ON;
+CREATE OR REPLACE TRIGGER Dept_Change
+AFTER INSERT OR UPDATE OR DELETE ON departments
+FOR EACH ROW
+BEGIN
+    IF INSERTING THEN
+        INSERT INTO Dept_log VALUES
+        (NULL, :NEW.department_id, NULL, :NEW.department_name, NULL, :NEW.manager_id, SYSDATE, USER, 'Row Inserted');
+    ELSIF UPDATING THEN
+        INSERT INTO Dept_log VALUES
+        (:OLD.department_id, :NEW.department_id, :OLD.department_name, :NEW.department_name, :OLD.manager_id, :NEW.manager_id, SYSDATE, USER, 'Row Updated');
+    ELSIF DELETING THEN
+        INSERT INTO Dept_log VALUES
+        (:OLD.department_id, NULL, :OLD.department_name, NULL, :OLD.manager_id, NULL, SYSDATE, USER, 'Row Deleted');
+    END IF;
+    END Dept_Change;
+    /
+
+INSERT INTO departments VALUES (999, 'Test', null, 1700);
+
+UPDATE departments set manager_id = 103   WHERE department_id = 999;
+
+DELETE departments where department_id = 999;
+SELECT * from Dept_log;
+rollback;
+DROP TRIGGER Dept_Change;
+
+
+
+--Q4
+CREATE OR REPLACE PACKAGE Pack_Dept AS
+     Type DEPT_INFO IS RECORD(
+        dept_id NUMBER,
+        dept_name VARCHAR2(30),
+        city VARCHAR2(30),
+        number_worker NUMBER
+    );
+    FUNCTION Get_Dept_Info(dept_no IN NUMBER) RETURN DEPT_INFO;
+    FUNCTION Get_Dept_Info(dept_name IN VARCHAR2) RETURN DEPT_INFO;
+END Pack_Dept;
+/
+
+CREATE OR REPLACE PACKAGE BODY Pack_Dept AS
+    FUNCTION Get_Dept_Info(dept_no NUMBER)
+    RETURN DEPT_INFO IS
+        f_dept_info DEPT_INFO;
+    BEGIN
+        SELECT d.department_id, d.department_name, l.city, COUNT(e.employee_id)
+        INTO f_dept_info.dept_id, f_dept_info.dept_name, f_dept_info.city, f_dept_info.number_worker
+        FROM departments d
+        JOIN locations l ON d.location_id = l.location_id
+        Left join employees e ON d.department_id = e.department_id
+        WHERE d.department_id = dept_no
+        GROUP BY d.department_id, d.department_name, l.city;
+        RETURN f_dept_info;
+    END Get_Dept_Info;
+
+    FUNCTION Get_Dept_Info(dept_name VARCHAR2) RETURN DEPT_INFO IS
+        f_dept_info DEPT_INFO;
+    BEGIN
+        SELECT d.department_id, d.department_name, l.city, COUNT(e.employee_id)
+        INTO f_dept_info.dept_id, f_dept_info.dept_name, f_dept_info.city, f_dept_info.number_worker
+        FROM departments d
+        JOIN locations l ON d.location_id = l.location_id
+        Left join employees e ON d.department_id = e.department_id
+        WHERE d.department_name = dept_name 
+        GROUP BY d.department_id, d.department_name, l.city;
+        RETURN f_dept_info;
+    END Get_Dept_Info;
+END Pack_Dept;
+/
+
+DECLARE
+    f_dept_info Pack_Dept.DEPT_INFO;
+BEGIN
+    f_dept_info := Pack_Dept.Get_Dept_Info(60);
+    DBMS_OUTPUT.PUT_LINE('Department ID: ' || f_dept_info.dept_id);
+    DBMS_OUTPUT.PUT_LINE('Department Name: ' || f_dept_info.dept_name);
+    DBMS_OUTPUT.PUT_LINE('City: ' || f_dept_info.city);
+    DBMS_OUTPUT.PUT_LINE('Number of Workers: ' || f_dept_info.number_worker);
+
+    FOR x IN (SELECT department_name FROM DEPARTMENTS where manager_id IS NOT NULL)LOOP
+        f_dept_info := Pack_Dept.Get_Dept_Info(x.department_name);
+        DBMS_OUTPUT.PUT_LINE('Department ID: ' || f_dept_info.dept_id);
+        DBMS_OUTPUT.PUT_LINE('Department Name: ' || f_dept_info.dept_name);
+        DBMS_OUTPUT.PUT_LINE('City: ' || f_dept_info.city);
+        DBMS_OUTPUT.PUT_LINE('Number of Workers: ' || f_dept_info.number_worker);
+    END LOOP;
+END;
+/
+
+
+
