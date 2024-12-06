@@ -1,0 +1,367 @@
+--Q1a:
+
+DECLARE
+    ID employees.EMPLOYEE_ID%TYPE;
+    years NUMBER; 
+    work_years DATE := DATE '2024-12-31';
+    sal employees.SALARY%TYPE;
+    bonus NUMBER(6,2);
+    dept employees.DEPARTMENT_ID%TYPE := 60;
+    totalYears NUMBER(6,2);
+    total_bonuses NUMBER(6,2) := 0;
+    PROCEDURE Emp_bonus(emp_no IN employees.EMPLOYEE_ID%TYPE, Sal OUT employees.SALARY%TYPE, work_year OUT NUMBER, bonus OUT NUMBER) IS
+    BEGIN
+        SELECT salary, FLOOR(MONTHS_BETWEEN(work_years, hire_date)/12) INTO sal, work_year
+        FROM employees
+        WHERE employee_id = emp_no;
+    
+        IF work_year >= 30 THEN
+            IF sal >= 8000 THEN
+                bonus := 2500;
+            ELSIF sal >= 3000 AND sal < 8000 THEN
+              bonus := 2300;
+            ELSIF sal < 3000 THEN
+              bonus := 2000;
+            END IF;
+        
+        ELSIF work_year >= 26 AND work_year < 30 THEN
+            IF sal >= 8000 THEN
+                bonus := 2000;
+            ELSIF sal >= 3000 AND sal < 8000 THEN
+              bonus := 1800;
+            ELSIF sal < 3000 THEN
+              bonus := 1500;
+            END IF;
+        
+        ELSIF work_year >= 23 AND work_year < 26 THEN
+            IF sal >= 8000 THEN
+                bonus := 1500;
+            ELSIF sal >= 3000 AND sal < 8000 THEN
+              bonus := 1500;
+            ELSIF sal < 3000 THEN
+              bonus := 1200;
+            END IF;
+        
+        Else
+            bonus := 1000;
+        END IF;
+    END Emp_bonus;
+BEGIN
+    FOR emp_rec IN (SELECT employee_id FROM employees WHERE department_id = dept) LOOP
+        Emp_bonus(emp_rec.employee_id, sal, years, bonus);
+
+        
+
+        DBMS_OUTPUT.PUT_LINE('ID: ' || emp_rec.employee_id || ' ' || 'Years Worked: ' || years || ' ' || 'Salary: ' || sal || ' ' || 'Bonus: ' || bonus);
+
+        total_bonuses := total_bonuses + bonus;
+    END LOOP;
+
+    DBMS_OUTPUT.PUT_LINE('Total Bonuses: ' || total_bonuses);
+
+END;
+
+
+--Q1b:
+
+CREATE OR REPLACE PROCEDURE Emp_bonus(emp_no IN employees.EMPLOYEE_ID%TYPE, Sal OUT employees.SALARY%TYPE, work_year OUT NUMBER, bonus OUT NUMBER) IS
+        work_years DATE := DATE '2024-12-31';
+    BEGIN
+      SELECT salary, FLOOR(MONTHS_BETWEEN(work_years, hire_date)/12) INTO sal, work_year
+        FROM employees
+        WHERE employee_id = emp_no;
+    
+        IF work_year >= 30 THEN
+            IF sal >= 8000 THEN
+                bonus := 2500;
+            ELSIF sal >= 3000 AND sal < 8000 THEN
+              bonus := 2300;
+            ELSIF sal < 3000 THEN
+              bonus := 2000;
+            END IF;
+        
+        ELSIF work_year >= 26 AND work_year < 30 THEN
+            IF sal >= 8000 THEN
+                bonus := 2000;
+            ELSIF sal >= 3000 AND sal < 8000 THEN
+              bonus := 1800;
+            ELSIF sal < 3000 THEN
+              bonus := 1500;
+            END IF;
+        
+        ELSIF work_year >= 23 AND work_year < 26 THEN
+            IF sal >= 8000 THEN
+                bonus := 1500;
+            ELSIF sal >= 3000 AND sal < 8000 THEN
+              bonus := 1500;
+            ELSIF sal < 3000 THEN
+              bonus := 1200;
+            END IF;
+        
+        Else
+            bonus := 1000;
+        END IF;
+    END Emp_bonus;
+    /
+
+DECLARE
+    ID employees.EMPLOYEE_ID%TYPE;
+    years NUMBER; 
+    work_years DATE := DATE '2024-12-31';
+    sal employees.SALARY%TYPE;
+    bonus NUMBER(6,2);
+    dept employees.DEPARTMENT_ID%TYPE := 60;
+    totalYears NUMBER(6,2);
+    total_bonuses NUMBER(6,2) := 0;
+
+BEGIN
+    FOR emp_rec IN (SELECT employee_id FROM employees WHERE department_id = dept) LOOP
+        Emp_bonus(emp_rec.employee_id, sal, years, bonus);
+
+        
+
+        DBMS_OUTPUT.PUT_LINE('ID: ' || emp_rec.employee_id || ' ' || 'Years Worked: ' || years || ' ' || 'Salary: ' || sal || ' ' || 'Bonus: ' || bonus);
+
+        total_bonuses := total_bonuses + bonus;
+    END LOOP;
+
+    DBMS_OUTPUT.PUT_LINE('Total Bonuses: ' || total_bonuses);
+END;
+
+
+
+--Q1c:
+
+CREATE OR REPLACE FUNCTION F_Bonus(empno IN employees.Employee_ID%TYPE)
+RETURN NUMBER IS
+    work_years DATE := DATE '2024-12-31';
+    sal employees.SALARY%TYPE;
+    bonus NUMBER(6,2);
+    years NUMBER;
+BEGIN
+
+    SELECT salary, FLOOR(MONTHS_BETWEEN(work_years, hire_date)/12) INTO sal, years
+    FROM employees
+    WHERE employee_id = empno;
+
+    IF years >= 30 THEN
+        IF sal >= 8000 THEN
+            bonus := 2500;
+        ELSIF sal >= 3000 AND sal < 8000 THEN
+          bonus := 2300;
+        ELSIF sal < 3000 THEN
+          bonus := 2000;
+        END IF;
+    
+    ELSIF years >= 26 AND years < 30 THEN
+        IF sal >= 8000 THEN
+            bonus := 2000;
+        ELSIF sal >= 3000 AND sal < 8000 THEN
+          bonus := 1800;
+        ELSIF sal < 3000 THEN
+          bonus := 1500;
+        END IF;
+    
+    ELSIF years >= 23 AND years < 26 THEN
+        IF sal >= 8000 THEN
+            bonus := 1500;
+        ELSIF sal >= 3000 AND sal < 8000 THEN
+          bonus := 1500;
+        ELSIF sal < 3000 THEN
+          bonus := 1200;
+        END IF;
+    
+    Else
+        bonus := 1000;
+    END IF;
+
+    RETURN bonus;
+END F_Bonus; 
+/
+DECLARE
+    bonus NUMBER(6,2);
+    dept employees.DEPARTMENT_ID%TYPE := 60;
+    BEGIN
+        FOR emp_rec IN (SELECT employee_id FROM employees WHERE department_id = dept) LOOP
+            bonus := F_Bonus(emp_rec.employee_id);
+            DBMS_OUTPUT.PUT_LINE('ID: ' || emp_rec.employee_id || ' ' || 'Bonus: ' || bonus);
+        END LOOP;
+    END;
+
+
+--Q1d:
+
+DECLARE
+    TYPE E_Bonus IS RECORD(
+        ID employees.EMPLOYEE_ID%TYPE,
+        years NUMBER,
+        sal employees.SALARY%TYPE,
+        bonus NUMBER(6,2)
+    );
+
+    total_bonus NUMBER(6,2) := 0;
+
+    FUNCTION F_Bonus(empno IN employees.Employee_ID%TYPE)
+    RETURN E_Bonus IS
+        work_years DATE := DATE '2024-12-31';
+        sal employees.SALARY%TYPE;
+        bonus NUMBER(6,2);
+        years NUMBER;
+        result E_Bonus;
+    BEGIN
+            
+            SELECT salary, FLOOR(MONTHS_BETWEEN(work_years, hire_date)/12) INTO sal, years
+            FROM employees
+            WHERE employee_id = empno;
+    
+            IF years >= 30 THEN
+                IF sal >= 8000 THEN
+                    bonus := 2500;
+                ELSIF sal >= 3000 AND sal < 8000 THEN
+                bonus := 2300;
+                ELSIF sal < 3000 THEN
+                bonus := 2000;
+                END IF;
+            
+            ELSIF years >= 26 AND years < 30 THEN
+                IF sal >= 8000 THEN
+                    bonus := 2000;
+                ELSIF sal >= 3000 AND sal < 8000 THEN
+                bonus := 1800;
+                ELSIF sal < 3000 THEN
+                bonus := 1500;
+                END IF;
+            
+            ELSIF years >= 23 AND years < 26 THEN
+                IF sal >= 8000 THEN
+                    bonus := 1500;
+                ELSIF sal >= 3000 AND sal < 8000 THEN
+                bonus := 1500;
+                ELSIF sal < 3000 THEN
+                bonus := 1200;
+                END IF;
+            
+            Else
+                bonus := 1000;
+            END IF;
+    
+            result.ID := empno;
+            result.years := years;
+            result.sal := sal;
+            result.bonus := bonus;
+    
+            RETURN result;
+        END F_Bonus;
+    BEGIN
+        FOR e in (SELECT employee_id FROM employees WHERE department_id = 60) LOOP
+            DECLARE
+                emp E_Bonus;
+            BEGIN
+                emp := F_Bonus(e.employee_id);
+                total_bonus := total_bonus + emp.bonus;
+                DBMS_OUTPUT.PUT_LINE('ID: ' || emp.ID || ' ' || 'Years Worked: ' || emp.years || ' ' || 'Salary: ' || emp.sal || ' ' || 'Bonus: ' || emp.bonus);
+            END;
+        END LOOP;
+        DBMS_OUTPUT.PUT_LINE('Total Bonuses: ' || total_bonus);
+    END;
+    /
+
+
+--Q2:
+
+DECLARE 
+    FUNCTION Dept_Address(deptno IN departments.DEPARTMENT_ID%TYPE)
+    RETURN VARCHAR2 IS
+        dept_address VARCHAR2(100);
+    BEGIN
+        SELECT street_address || ' '||city || ', '||state_province || ' ' ||Postal_code ||', '||   ' '|| country_id as Address
+        INTO dept_address
+        FROM LOCATIONS
+        join departments on locations.location_id = departments.location_id
+        WHERE departments.department_id = deptno;
+        RETURN dept_address;
+    END Dept_Address;
+
+    FUNCTION Dept_Address(dept_name IN departments.DEPARTMENT_NAME%TYPE)
+    RETURN VARCHAR2 IS
+        dept_address VARCHAR2(100);
+    BEGIN
+        SELECT street_address || ' '||city || ', '||state_province || ' ' ||Postal_code ||', '||   ' '|| country_id as Address
+        INTO dept_address
+        FROM LOCATIONS
+        join departments on locations.location_id = departments.location_id
+        WHERE departments.department_name = dept_name;
+        RETURN dept_address;
+    END Dept_Address;
+
+    BEGIN
+        DBMS_OUTPUT.PUT_LINE('Department Address (IT): ' || Dept_Address('IT'));
+        DBMS_OUTPUT.PUT_LINE('Department Address (60): ' || Dept_Address(60));
+
+    END;
+/
+
+
+
+--Q3:
+
+DECLARE
+
+    TYPE emp_name IS RECORD(
+        f_name VARCHAR2 (20),
+        l_name VARCHAR2 (25)
+    );
+
+    emp1 emp_name;
+    emp2 emp_name;
+    emp3 emp_name;
+
+    FUNCTION Emp_name_eq(rec1 IN emp_name, rec2 IN emp_name)
+    RETURN BOOLEAN IS
+    ret BOOLEAN;
+
+    BEGIN
+
+        IF (UPPER(rec1.f_name) = UPPER (rec2.f_name) AND UPPER(rec1.l_name) = UPPER(rec2.l_name)) THEN
+            ret := TRUE;
+        ELSE
+            ret := FALSE;
+        END IF;
+        RETURN ret;
+    END;
+
+    BEGIN
+
+        SELECT first_name, last_name INTO emp1.f_name, emp1.l_name
+        FROM employees
+        WHERE employee_id = 200;
+
+        emp2 := emp1;
+        emp3.f_name := 'Jenifer';
+        emp3.l_name := 'Whalen';
+
+
+        IF emp_name_eq(emp1, emp2) THEN
+            DBMS_OUTPUT.PUT_LINE('The two records emp1 '''|| emp2.f_name || 
+            ' ' || emp2.l_name ||''' and emp2 '''|| emp3.f_name || ' ' ||
+             emp3.l_name || ''' are the same.' );
+        ELSE
+            DBMS_OUTPUT.PUT_LINE('The two records emp1 '''|| emp2.f_name || 
+            ' ' || emp2.l_name ||''' and emp2 '''|| emp3.f_name || ' ' 
+            || emp3.l_name || ''' are Not same.' );
+        END IF;
+
+        IF emp_name_eq (emp2, emp3) THEN
+     DBMS_OUTPUT.PUT_LINE('The two records emp2 '''|| emp2.f_name || 
+     ' ' || emp2.l_name ||''' and emp3 '''|| emp3.f_name || ' ' || 
+     emp3.l_name || ''' are the same.' );
+
+        ELSE
+      DBMS_OUTPUT.PUT_LINE('The two records emp2 '''|| emp2.f_name || 
+     ' ' || emp2.l_name ||''' and emp3 '''|| emp3.f_name || ' ' || 
+     emp3.l_name || ''' are Not same.' );
+   END IF;
+
+END;
+/
+
