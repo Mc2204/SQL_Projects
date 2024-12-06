@@ -1,0 +1,160 @@
+-Q1
+set serveroutput on;
+DECLARE
+    Type tab_column IS RECORD(
+        col_name VARCHAR2(30),
+        data_type VARCHAR2(30),
+        data_len NUMBER
+    );
+    V1 tab_column;
+    Cursor c IS
+        SELECT column_name, data_type, data_length
+        FROM user_tab_columns
+        WHERE table_name = 'LOCATIONS';
+BEGIN
+    OPEN c;
+    LOOP
+        FETCH c INTO V1.col_name, V1.data_type, V1.data_len;
+        EXIT WHEN c%NOTFOUND;
+        DBMS_OUTPUT.PUT_LINE(V1.col_name || ' ' || V1.data_type || ' (' || V1.data_len || ')');
+    END LOOP;
+    CLOSE c;
+END;
+
+
+-Q2
+
+set SERVEROUTPUT ON;
+DECLARE
+    Type DEPT_INFO IS RECORD(
+        dept_id NUMBER,
+        dept_name VARCHAR2(30),
+        city VARCHAR2(30),
+        number_worker NUMBER
+    );
+    V2 DEPT_INFO;
+BEGIN
+        SELECT department_id, department_name
+        INTO V2.dept_id, V2.dept_name
+        FROM departments
+        Where department_id = 60;
+
+        select city
+        INTO V2.city
+        FROM locations l
+        join departments d on l.location_id = d.location_id
+        Where d.department_id = 60;
+
+        select count(*)
+        INTO V2.number_worker
+        FROM employees
+        Where department_id = 60;
+        
+        DBMS_OUTPUT.PUT_LINE('Dept ID: ' || V2.dept_id);
+        DBMS_OUTPUT.PUT_LINE('Dept Name: ' || V2.dept_name);
+        DBMS_OUTPUT.PUT_LINE('City: ' || V2.city);
+        DBMS_OUTPUT.PUT_LINE('Amount of Workers: ' || V2.number_worker);
+
+
+END;
+
+
+-Q3
+
+DECLARE
+    TYPE Dept_Info IS RECORD(
+        dept_id NUMBER,
+        dept_name VARCHAR2(30),
+        city VARCHAR2(30)
+    );
+
+    Type Dept_Info_NT IS TABLE OF Dept_Info;
+
+    List Dept_Info_NT := Dept_Info_NT();
+
+    i integer := 1;
+    Cursor c IS
+        select d.department_id, d.department_name, l.city
+        FROM locations l, departments d
+        WHERE d.location_id = l.location_id and manager_id is not null
+        order by 1;
+BEGIN
+    FOR r IN c LOOP
+        List.extend(1);
+        List(i).dept_id := r.department_id;
+        List(i).dept_name := r.department_name;
+        List(i).city := r.city;
+        i := i + 1;
+    END LOOP;
+
+    FOR j IN 1..List.count LOOP
+        DBMS_OUTPUT.PUT_LINE('Dept ID: ' || List(j).dept_id);
+        DBMS_OUTPUT.PUT_LINE('Dept Name: ' || List(j).dept_name);
+        DBMS_OUTPUT.PUT_LINE('City: ' || List(j).city);
+    END LOOP;
+END;
+
+
+-Q4
+
+DECLARE
+    Deptno NUMBER := 30;
+    min_sal NUMBER;
+    max_sal NUMBER;
+PROCEDURE Dept_Emp_sal (Deptno IN NUMBER, min_sal OUT NUMBER, max_sal OUT NUMBER) IS
+BEGIN
+    
+    SELECT MIN(salary), MAX(salary)
+    INTO min_sal, max_sal
+    FROM employees
+    WHERE Deptno = department_id;
+END Dept_Emp_sal;
+BEGIN
+    Dept_Emp_sal(Deptno, min_sal, max_sal);
+    DBMS_OUTPUT.PUT_LINE('The minimum salary in department ' || Deptno || ' is ' || min_sal);
+    DBMS_OUTPUT.PUT_LINE('The maximum salary in department ' || Deptno || ' is ' || max_sal);
+END;
+
+
+
+-Q5
+
+CREATE OR REPLACE PROCEDURE Dep_Emp_sal(Deptno IN NUMBER, min_sal OUT NUMBER, max_sal OUT NUMBER) AS
+BEGIN
+    SELECT MIN(salary), MAX(salary)
+    INTO min_sal, max_sal
+    FROM employees
+    WHERE department_id = Deptno;
+END Dep_Emp_sal;
+/
+DECLARE
+    Deptno NUMBER := 30;
+    min_sal NUMBER;
+    max_sal NUMBER;
+Begin
+    Dep_Emp_sal(Deptno, min_sal, max_sal);
+    DBMS_OUTPUT.PUT_LINE('The minimum salary in department ' || Deptno || ' is '  || min_sal);
+    DBMS_OUTPUT.PUT_LINE('The maximum salary in department ' ||  Deptno || ' is '  || max_sal);
+END;
+
+
+
+-Q6
+
+DECLARE
+    min_sal NUMBER;
+    max_sal NUMBER;
+
+    Cursor c IS
+        SELECT department_id
+        From DEPARTMENTS
+        WHERE MANAGER_ID IS NOT NULL;
+    BEGIN
+        FOR x IN c LOOP
+            Dep_Emp_sal(x.department_id, min_sal, max_sal);
+            DBMS_OUTPUT.PUT_LINE('The minimum salary in department ' || x.department_id || ' is ' || min_sal);
+            DBMS_OUTPUT.PUT_LINE('The maximum salary in department ' || x.department_id || ' is ' || max_sal);
+        END LOOP;
+    END;
+
+
